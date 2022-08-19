@@ -1,15 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:genie/src/backend/base_donnees/firebase_management.dart';
+import 'package:genie/src/backend/base_donnees/genieAuth.dart';
 import 'package:genie/src/backend/modeles/produit.dart';
+import 'package:genie/src/frontend/screens/pageCommandesClients.dart';
+import 'package:genie/src/frontend/screens/pageFormulaireAjouterProduit.dart';
+import 'package:genie/src/frontend/screens/pageFormulaireCommande.dart';
+import 'package:genie/src/frontend/screens/pageFormulairePaiement.dart';
+import 'package:genie/src/frontend/screens/pageInscription.dart';
+import 'package:genie/src/frontend/screens/pageListeMenus.dart';
+import 'package:genie/src/frontend/screens/pageListeproduits.dart';
+import 'package:genie/src/frontend/screens/pageTest.dart';
 import 'package:genie/src/frontend/screens/screen1.dart';
+import 'package:genie/src/frontend/screens/welcome.dart';
+import 'package:provider/provider.dart';
 
 void main() async{
-  //WidgetsFlutterBinding.ensureInitialized();
-  //await Firebase.initializeApp();
-  //await GenieFirebase.add("produits", {'nom': "riz", 'prix': 25} );
-  Produit p = Produit(id: '12', image: 'assets/images/D5.jpg', nom: 'Pro24', description: "Dans la culture occidentale moderne, le dessert est le dernier plat servi au cours d'un repas, typiquement composé d'aliments sucrés : fruits, pâtisseries, sorbets, flans, etc. Ils peuvent être consommés avec une fourchette ou avec une cuillère à dessert, d'une taille intermédiaire entre la cuillère à café et la cuillère à soupe. Dans une acception plus ancienne, le dessert comprenait aussi le fromage.", type: TypeProduit.dessert, prix: 5);
-  //await GenieFirebase.add("produit", p.toMap());
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
       runApp(const MyApp());
 }
 
@@ -19,13 +28,26 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Au Restau',
-      theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
+    return MultiProvider(
+      providers: [
+        StreamProvider<User?>(create: (context)=>GenieAuthService.authStateChanges,
+            initialData: GenieAuthService.auth.currentUser)
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: '',
+        theme: ThemeData(
+          primarySwatch: Colors.blueGrey,
+        ),
+        //home: ListePoduits(),
+        //home: FormulaireAjouterProduit(),
+        //home: FormulairePaiement(),
+        //home: FormulaireCommande(),
+        //home: CommandesDesClients(),
+        //home: Inscription(),
+        home: const MyHomePage(title: ''),
+        //home: Welcome(),
       ),
-      home: const MyHomePage(title: 'Au Restau'),
     );
   }
 }

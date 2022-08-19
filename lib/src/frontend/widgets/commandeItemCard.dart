@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:genie/src/backend/modeles/commandeItem.dart';
 
-import '../../backend/base_donnees/local_db_manager.dart';
 import '../../backend/modeles/produit.dart';
 
-class ProduitCard extends StatelessWidget {
+class CommandeItemCard extends StatelessWidget {
 
   final Produit produit;
-  final bool boutton;
-  ProduitCard({Key? key, required this.produit, this.boutton = true}) : super(key: key);
+  //final bool boutton;
+  final int quantite;
+  const CommandeItemCard({Key? key, required this.produit, required this.quantite}) : super(key: key);
 
-  LocalBdManager localBdManager = LocalBdManager();
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -59,6 +57,8 @@ class ProduitCard extends StatelessWidget {
                                         color: Colors.orange
                                     ),
                                   ),
+                                  SizedBox(width: 60,),
+                                  Text('Quantité: $quantite'),
                                 ],
                               ),
                             )
@@ -72,21 +72,9 @@ class ProduitCard extends StatelessWidget {
                             child: Text('\$' +produit.prix.toString()),
                           ),
 
-                          SizedBox(height: 30,),
+                          //SizedBox(height: 40,),
 
-                          if(boutton)
-                          ElevatedButton(
-                              onPressed: () async {
-                                await localBdManager.insertProduitInPanier(
-                                    CommandeItem(idProduit: produit.id, quantity: 1, id: 0));
-                                //print('Le produit a été ajouté');
-                              },
-                              child: Text('Ajouter au panier',
-                              style: TextStyle(
-                                fontSize: 8
-                              ),
-                              )
-                          )
+                          //Text('Quantité: $quantite'),
                         ],
                       )
                     ],

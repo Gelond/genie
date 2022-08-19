@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:genie/src/backend/base_donnees/local_db_manager.dart';
+import 'package:genie/src/backend/modeles/commandeItem.dart';
 import 'package:genie/src/frontend/screens/pageDescriptionProduit.dart';
 import 'package:genie/src/frontend/screens/pageFormulaireCommande.dart';
 
-import '../../backend/base_donnees/dataProduits.dart';
 import '../../backend/modeles/produit.dart';
 import '../widgets/customTabBar.dart';
 import '../widgets/panierCard.dart';
@@ -18,29 +19,47 @@ class AfficherPanier extends StatefulWidget {
 
 class _AfficherPanierState extends State<AfficherPanier> {
 
+  List<CommandeItem> panier = [];
   int _selectedIndex = 0;
-  List<String> tabBars = ['Tous', 'Entrées', 'Plats de résistance', 'Desserts'];
-  List<Produit> produitsInPanier = panier;
+  List<String> tabBars = ['Tous', 'Entrées', 'Plats de résistance', 'Desserts', 'Boissons'];
+  List<CommandeItem> produitsInPanier = [];
 
   void _trier(int index)
   {
+    produitsInPanier = panier;
     if (index == 0) {
       produitsInPanier = panier;
     }
 
     else if (index == 1) {
-      var list = panier.where((p) => p.type == TypeProduit.entree);
+      var list = panier.where((p) => p.produit!.type == TypeProduit.entree);
       produitsInPanier = list.toList();
     }
 
     else if (index == 2) {
-      var list = panier.where((p) => p.type == TypeProduit.resistant);
+      var list = panier.where((p) => p.produit!.type == TypeProduit.resistant);
       produitsInPanier = list.toList();
     }
     else if (index == 3) {
-      var list = panier.where((p) => p.type == TypeProduit.dessert);
+      var list = panier.where((p) => p.produit!.type == TypeProduit.dessert);
       produitsInPanier = list.toList();
     }
+    else {
+      var list = panier.where((p) => p.produit!.type == TypeProduit.boisson);
+      produitsInPanier = list.toList();
+    }
+  }
+  LocalBdManager localBdManager = LocalBdManager();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    localBdManager.produitsInPanier().then((value) {
+      setState(() {
+        panier = value;
+        produitsInPanier = value;
+      });
+    });
   }
 
   @override
@@ -84,7 +103,7 @@ class _AfficherPanierState extends State<AfficherPanier> {
               pinned: true,
               backgroundColor: Colors.white,
               title: Container(
-                height: 100.0,
+                  height: 100.0,
                 margin: EdgeInsets.symmetric(vertical: 8.0),
                 child: TabBar(
                   tabs: List.generate(tabBars.length, (index) {
@@ -109,14 +128,21 @@ class _AfficherPanierState extends State<AfficherPanier> {
               ),
             ),
 
+            /*setState(() {
+                          _selectedIndex = index;
+                          _trier(_selectedIndex);
+                        }*/
+
             SliverList(delegate: SliverChildListDelegate(List.generate(produitsInPanier.length, (int index) {
               return Column(
                 children: [
                   InkWell(
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=>DescriptionProduit(produit: produitsInPanier[index], inPanier: true, boutton: true,)));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                          DescriptionProduit(produit: produitsInPanier[index].produit!,
+                            inPanier: true, boutton: true,)));
                     },
-                    child: PanierCard(produit: produitsInPanier[index]),
+                    child: PanierCard(item: produitsInPanier[index]),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
@@ -129,13 +155,17 @@ class _AfficherPanierState extends State<AfficherPanier> {
             )
             ),
 
+
+
             SliverToBoxAdapter(
               child: Column(
                 children: [
+                  if(panier.isEmpty) Text("Aucun produit n'a été ajouté"),
+                  if(panier.isNotEmpty)
                   ElevatedButton(
                       onPressed: ()
                       {
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>FormulaireCommande()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>FormulaireCommande(items: panier,)));
                       },
                       child: Text('Valider le panier',
                         style: TextStyle(

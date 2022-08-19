@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../../backend/base_donnees/local_db_manager.dart';
+import '../../backend/modeles/commandeItem.dart';
 import '../../backend/modeles/produit.dart';
 
 class DescriptionProduit extends StatefulWidget {
@@ -15,7 +17,7 @@ class DescriptionProduit extends StatefulWidget {
 
 class _DescriptionProduitState extends State<DescriptionProduit> {
   bool isFav = true;
-
+  LocalBdManager localBdManager = LocalBdManager();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,8 +199,24 @@ class _DescriptionProduitState extends State<DescriptionProduit> {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 100.0, vertical: 5),
                               child: ElevatedButton(
-                                  onPressed: () {},
-                                  child: widget.inPanier ? Text('Supprimer', style: TextStyle(fontSize: 13)) : Text('Ajouter au panier',)
+                                  onPressed: () async {
+                                    //CommandeItem c = CommandeItem(idProduit: widget.produit.id, quantity: 1, id: 0);
+                                    CommandeItem? item = await localBdManager.produitInPanier(widget.produit.id);
+                                    if(!widget.inPanier)
+                                      {
+                                        await localBdManager.insertProduitInPanier(
+                                            CommandeItem(idProduit: widget.produit.id, quantity: 1, id: 0));
+                                        //print('Le produit a été ajouté');
+                                      }
+                                    else
+                                      {
+                                        print('Debut suppression, $item.idProduit');
+                                        await localBdManager.deleteProduitFromPanier(item!.id);
+                                        print('Le produit a été supprimé');
+                                      }
+                                  },
+                                  child: widget.inPanier ?
+                                  Text('Supprimer', style: TextStyle(fontSize: 13)) : Text('Ajouter au panier',)
                               ),
                             )
                         ],

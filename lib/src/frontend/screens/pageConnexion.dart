@@ -2,7 +2,12 @@ import 'dart:ffi';
 
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:genie/src/backend/base_donnees/firebase_personnel.dart';
+import 'package:genie/src/backend/base_donnees/genieAuth.dart';
+import 'package:genie/src/backend/modeles/personnel.dart';
 import 'package:genie/src/frontend/screens/pageCommandes.dart';
+import 'package:genie/src/frontend/screens/pageListeproduits.dart';
 
 class SeConnecter extends StatefulWidget {
   const SeConnecter({Key? key}) : super(key: key);
@@ -54,7 +59,7 @@ class _SeConnecterState extends State<SeConnecter> {
                             padding: const EdgeInsets.only(top:3),
                             child: Image.asset('assets/images/con.png', fit: BoxFit.cover,),
                           ),
-                          height: MediaQuery.of(context).size.width,
+                          //height: MediaQuery.of(context).size.width,
                         ),
                       ),
                     ),
@@ -119,11 +124,6 @@ class _SeConnecterState extends State<SeConnecter> {
                                     return null;
                                   }
 
-                                  /*else if( v.length >= 8 )
-                                    {
-                                      return "Mot de passe incorrect";
-                                    }*/
-
                                   else {
                                     return "Mot de passe invalide";
                                   }
@@ -157,13 +157,30 @@ class _SeConnecterState extends State<SeConnecter> {
                             RaisedButton(
                               elevation: 10,
 
-                              onPressed: ()
+                              onPressed: () async
                               {
                                 if (_key.currentState!.validate())
                                 {
-                                  Navigator.push(context, MaterialPageRoute(builder: (context)=>Commandes()));
-                                  print(_login);
-                                  print(_pw);
+                                  _key.currentState!.save();
+                                  String retour = await GenieAuthService.signInWithEmailAndPassword
+                                    (email: _login, password: _pw);
+
+                                  if(retour == 'signin')
+                                  {
+                                    Personnel? personnel = await FirebasePersonnel.getPersonnelByUid(GenieAuthService.auth.currentUser!.uid);
+
+                                    if(personnel!.type == TypePersonnel.cuisinier)
+                                    Navigator.push(context, MaterialPageRoute(
+                                        builder: (context) =>
+                                            Commandes(kitchen: true,)));
+
+                                    else if(personnel!.type == TypePersonnel.gerant)
+                                      Navigator.push(context, MaterialPageRoute(
+                                          builder: (context) => ListePoduits()));
+                                  }
+                                  else Fluttertoast.showToast(msg: retour);
+                                  //print(_login);
+                                  //print(_pw);
                                 }
                               },
 

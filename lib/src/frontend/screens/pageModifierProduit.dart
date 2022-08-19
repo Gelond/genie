@@ -1,43 +1,50 @@
-import 'package:email_validator/email_validator.dart';
-//import 'package:fluter1/screens/pageMenu.dart';
 import 'package:flutter/material.dart';
-import 'package:genie/src/backend/base_donnees/dataProduits.dart';
-import 'package:genie/src/backend/base_donnees/firebase_commande.dart';
-import 'package:genie/src/backend/base_donnees/local_db_manager.dart';
-import 'package:genie/src/backend/modeles/commande.dart';
-import 'package:genie/src/backend/modeles/commandeItem.dart';
-import 'package:genie/src/frontend/screens/pageMenu.dart';
+import 'package:genie/src/backend/base_donnees/firebase_produit.dart';
+import 'package:genie/src/backend/modeles/produit.dart';
 import 'package:select_form_field/select_form_field.dart';
 
-class FormulaireCommande extends StatefulWidget {
-  final List<CommandeItem> items;
-  const FormulaireCommande({Key? key, required this.items}) : super(key: key);
+class FormulaireModifierProduit extends StatefulWidget {
+  Produit produit;
+
+  FormulaireModifierProduit({Key? key, required this.produit}) : super(key: key);
 
   @override
-  State<FormulaireCommande> createState() => _FormulaireCommandeState();
+  State<FormulaireModifierProduit> createState() => _FormulaireModifierProduitState();
 }
 
-class _FormulaireCommandeState extends State<FormulaireCommande> {
-  late LocalBdManager localBdManager = LocalBdManager();
+class _FormulaireModifierProduitState extends State<FormulaireModifierProduit> {
 
+  late String image;
   late String _nom;
-  late bool _emporter = false;
-  late int _numTab;
-
+  late double _prix;
+  late int _type;
+  late int _disponibility;
+  late String _description;
+  late bool _isFavorite = false;
+  late bool checkedValue = true;
 
   final _key = GlobalKey<FormState>();
 
   GlobalKey<FormState> _oFormKey = GlobalKey<FormState>();
   TextEditingController? _controller;
+
   final List<Map<String, dynamic>> _items = [
     {
-      'value' : 'Servir sur table',
-      'label' : 'Servir sur table'
+      'value' : '0',
+      'label' : 'Entrée'
     },
     {
-      'value' : 'Emporter',
-      'label' : 'Emporter'
+      'value' : '1',
+      'label' : 'Plat de résistance'
     },
+    {
+      'value' : '2',
+      'label' : 'Dessert'
+    },
+    {
+      'value' : '3',
+      'label' : 'Boisson'
+    }
   ];
   String _valueChanged = '';
   String _valueToValidate = '';
@@ -60,21 +67,17 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
     _controller = TextEditingController(text: '2');
 
     _getValue();
-  }
 
+    _isFavorite = widget.produit.isFavorite;
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          centerTitle: true,
-          title: Text('Formulaire de commande',
-            style: TextStyle(
-                fontSize: 20.0
-            ),
+          //centerTitle: true,
 
-          ),
           //centerTitle: true,
           leading: new IconButton(
               onPressed: () => Navigator.pop(context),
@@ -94,14 +97,19 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
                 children: [
                   //SizedBox(height: 0,),
                   Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 15.0),
-                      child: Text('Remplissez ce formulaire pour valider votre commande...',
-                        style: TextStyle(
-                          //color: Colors.redAccent,
-                          fontSize: 15,
-                          //fontWeight: FontWeight.bold
-                        ),),
+                    child: Container(
+                      height: MediaQuery.of(context).size.height/5,
+                      width: MediaQuery.of(context).size.width-10,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top:3),
+                            child: Image.asset(widget.produit.image, fit: BoxFit.cover,),
+                          ),
+                          height: MediaQuery.of(context).size.width,
+                        ),
+                      ),
                     ),
                   ),
                   Column(
@@ -114,24 +122,39 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
                               child: Column(
                                 children: [
 
-                                  Container(
-                                    height: MediaQuery.of(context).size.height/3+30,
-                                    width: MediaQuery.of(context).size.width-10,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Container(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(top:3),
-                                          child: Image.asset('assets/images/t.jpg', fit: BoxFit.cover,),
-                                        ),
-                                        height: MediaQuery.of(context).size.width,
-                                      ),
-                                    ),
+                                  TextFormField(
+                                    initialValue: widget.produit.nom,
+                                      keyboardType: TextInputType.name,
+                                      textInputAction: TextInputAction.next,
+                                      validator: (String? v) {
+                                        if (v != null && v.length !=0) {
+                                          return null;
+                                        }
+                                        else {
+                                          return "Entrez le nom du produit";
+                                        }
+                                      },
+                                      onSaved: (String? v) {
+                                        _nom = v!;
+                                      },
+                                      decoration: InputDecoration(
+                                          label: Text('Nom:'), hintText: "Ex: Pizza",
+
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(0.0),
+                                            borderSide: BorderSide(color: Colors.red),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(20.0),
+                                            borderSide: BorderSide(color: Colors.green),
+                                          )
+                                      )
                                   ),
 
-                                  SizedBox(height: 10,),
+                                  SizedBox(height: 12,),
 
                                   TextFormField(
+                                    initialValue: widget.produit.prix.toString(),
                                       keyboardType: TextInputType.number,
                                       textInputAction: TextInputAction.next,
                                       validator: (String? v) {
@@ -139,14 +162,99 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
                                           return null;
                                         }
                                         else {
-                                          return "Entrez le numéro de votre table";
+                                          return "Entrez le prix du produit";
                                         }
                                       },
                                       onSaved: (String? v) {
-                                        _numTab = int.parse(v!);
+                                        _prix = double.parse(v!);
                                       },
                                       decoration: InputDecoration(
-                                          label: Text('Table:'), hintText: "Ex: 25",
+                                          label: Text('Prix(\$):'), hintText: "Ex: 20",
+
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(0.0),
+                                            borderSide: BorderSide(color: Colors.red),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(20.0),
+                                            borderSide: BorderSide(color: Colors.green),
+                                          )
+                                      )
+                                  ),
+
+                                  SizedBox(height: 12,),
+
+                                  SelectFormField(
+                                    initialValue: widget.produit.type.index.toString(),
+                                    type: SelectFormFieldType.dropdown,
+                                    labelText: 'Choisissez le type du produit',
+                                    items: _items,
+                                    /*onChanged: (val) {
+                                    print(val);
+                                    },
+                                    onSaved: (val) => print(val),*/
+                                    dialogCancelBtn: 'Annuler',
+                                    enableSearch: true,
+                                    dialogSearchHint: 'Search item',
+                                    onChanged: (val) => setState(() => _valueChanged = val),
+                                    validator: (val) {
+                                      setState(() => _valueToValidate = val ?? '');
+                                      return null;
+                                    },
+                                    onSaved: (val) => setState(() {
+                                      _valueSaved = val ?? '';
+                                      _type =  int.parse(_valueSaved);
+                                    }),
+                                  ),
+
+                                  /*TextFormField(
+                                      keyboardType: TextInputType.text,
+                                      textInputAction: TextInputAction.next,
+                                      validator: (String? v) {
+                                        if (v != null && v.length != 0) {
+                                          return null;
+                                        }
+                                        else {
+                                          return "Choississez le type du produit";
+                                        }
+                                      },
+                                      onSaved: (String? v) {
+                                        _type = v!;
+                                      },
+                                      decoration: InputDecoration(
+                                          label: Text('Type:'), hintText: "Ex: Plat de résistance",
+
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(0.0),
+                                            borderSide: BorderSide(color: Colors.red),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(20.0),
+                                            borderSide: BorderSide(color: Colors.green),
+                                          )
+                                      )
+                                  ),*/
+
+                                  SizedBox(height: 12,),
+
+                                  TextFormField(
+                                    initialValue: widget.produit.disponibility.toString(),
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.next,
+
+                                      validator: (String? v) {
+                                        if (v != null && v.length !=0 ) {
+                                          return null;
+                                        }
+                                        else {
+                                          return "Entrez la quantité disponible";
+                                        }
+                                      },
+                                      onSaved: (String? v) {
+                                        _disponibility = int.parse(v!);
+                                      },
+                                      decoration: InputDecoration(
+                                          label: Text('Disponibilité:'), hintText: "Ex: 95",
 
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(0.0),
@@ -162,57 +270,36 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
                                   SizedBox(height: 12,),
 
                                   CheckboxListTile(
-                                    title: Text("Emporter"),
-                                    value: _emporter,
+                                    title: Text("isFavorite"),
+                                    value: _isFavorite,
                                     onChanged: (newValue){
                                       setState( () {
-                                        _emporter=  newValue!;
+                                        _isFavorite=  newValue!;
                                       });
                                     },
                                     controlAffinity: ListTileControlAffinity.leading,
                                   ),
 
-
-                                  /*SelectFormField(
-                                    type: SelectFormFieldType.dropdown,
-                                    labelText: 'Choisissez le type de commande',
-                                    items: _items,
-                                    /*onChanged: (val) {
-                                    print(val);
-                                    },
-                                    onSaved: (val) => print(val),*/
-                                    dialogCancelBtn: 'Annuler',
-                                    enableSearch: true,
-                                    dialogSearchHint: 'Search item',
-                                    onChanged: (val) => setState(() => _valueChanged = val),
-                                    validator: (val) {
-                                      setState(() => _valueToValidate = val ?? '');
-                                      return null;
-                                    },
-                                    onSaved: (val) {
-                                      setState(() => _valueSaved = val ?? '');
-                                      _type = _valueSaved;
-                                    }
-                                  ),*/
-
                                   SizedBox(height: 12,),
 
                                   TextFormField(
-                                      keyboardType: TextInputType.name,
+                                    initialValue: widget.produit.description,
+                                      keyboardType: TextInputType.multiline,
                                       textInputAction: TextInputAction.next,
+
                                       validator: (String? v) {
-                                        if (v != null && v.length != 0) {
+                                        if (v != null && v.length !=0 ) {
                                           return null;
                                         }
                                         else {
-                                          return "Entrez nom";
+                                          return "Saisissez une description";
                                         }
                                       },
                                       onSaved: (String? v) {
-                                        _nom = v!;
+                                        _description = v!;
                                       },
                                       decoration: InputDecoration(
-                                          label: Text('Nom:'), hintText: "Ex: Brel",
+                                          label: Text('Description:'), hintText: "Ex: Pizza est bonne",
 
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(0.0),
@@ -227,106 +314,23 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
 
                                   SizedBox(height: 12,),
 
-
-                                  SizedBox(width: MediaQuery.of(context).size.width/3,),
-
-                                  Center(
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        if (_key.currentState!.validate()) {
-                                          _key.currentState!.save();
-                                          //print(_numTab);
-                                          //print(_emporter);
-                                         // print(_nom);
-                                          Commande c = Commande(id: '', table: _numTab, commandeItems: widget.items,
-                                              nomClient: _nom, emporter: _emporter);
-                                          await FirebaseCommande.addCommande(c);
-                                          await localBdManager.viderPanier();
-                                          Navigator.push(context, MaterialPageRoute(builder: (context)=> PageMenu()));
-                                        }
-                                      },
-                                      child: Text('Envoyer'),
-                                    ),
-                                  )
-
-                                  /*TextFormField(
-                                      keyboardType: TextInputType.emailAddress,
-                                      textInputAction: TextInputAction.next,
-
-                                      validator: (String? v) {
-                                        if (v != null && EmailValidator.validate(v) ) {
-                                          return null;
-                                        }
-                                        else {
-                                          return "Email invalide";
-                                        }
-                                      },
-                                      onSaved: (String? v) {
-                                        _email = v!;
-                                      },
-                                      decoration: InputDecoration(
-                                          label: Text('Email:'), hintText: "Ex: john.junior@gmail.com",
-
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(0.0),
-                                            borderSide: BorderSide(color: Colors.red),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20.0),
-                                            borderSide: BorderSide(color: Colors.green),
-                                          )
-                                      )
-                                  ),*/
-
-                                  //SizedBox(height: 12,),
-                                  /*SizedBox(height: 12,),
-
                                   TextFormField(
-                                      keyboardType: TextInputType.phone,
-                                      textInputAction: TextInputAction.next,
-                                      validator: (String? v) {
-                                        if (v != null && v.length >= 8) {
-                                          return null;
-                                        }
-                                        else {
-                                          return "Entrez votre numéro";
-                                        }
-                                      },
-                                      onSaved: (String? v) {
-                                        _tel = v!;
-                                      },
-                                      decoration: InputDecoration(
-                                          label: Text('Téléphone:'), hintText: "Ex: +229 66660101",
-
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(0.0),
-                                            borderSide: BorderSide(color: Colors.red),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20.0),
-                                            borderSide: BorderSide(color: Colors.green),
-                                          )
-                                      )
-                                  ),
-
-                                  SizedBox(height: 15,),*/
-
-                                  /*TextFormField(
+                                      initialValue: widget.produit.image,
                                       keyboardType: TextInputType.text,
                                       textInputAction: TextInputAction.next,
                                       validator: (String? v) {
-                                        if (v != null && v.length >= 8) {
+                                        if (v != null && v.length !=0) {
                                           return null;
                                         }
                                         else {
-                                          return "Choisissez le type de commande";
+                                          return "image";
                                         }
                                       },
                                       onSaved: (String? v) {
-                                        _type = v!;
+                                        image = v!;
                                       },
                                       decoration: InputDecoration(
-                                          label: Text('Type de commande:'), hintText: "Ex: Emporter",
+                                          label: Text('image:'), hintText: "images.png",
 
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(0.0),
@@ -337,7 +341,48 @@ class _FormulaireCommandeState extends State<FormulaireCommande> {
                                             borderSide: BorderSide(color: Colors.green),
                                           )
                                       )
-                                  ),*/
+                                  ),
+
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 25.0),
+                                        child: ElevatedButton(
+                                          onPressed: ()=>  Navigator.pop(context),
+                                          child: Text("Annuler"),
+                                        ),
+                                      ),
+
+                                      SizedBox(width: MediaQuery.of(context).size.width/3,),
+
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          if (_key.currentState!.validate()) {
+                                            _key.currentState!.save();
+
+                                            widget.produit.image = image;
+                                            widget.produit.nom = _nom;
+                                            widget.produit.description = _description;
+                                            widget.produit.prix = _prix;
+                                            widget.produit.isFavorite = _isFavorite;
+                                            widget.produit.disponibility = _disponibility;
+                                            widget.produit.type = TypeProduit.values[_type];
+
+                                            await FirebaseProduit.updateProduit(widget.produit);
+
+                                            Navigator.pop(context);
+                                            //print(_nom);
+                                            //print(_prix);
+                                            //print(_type);
+                                            //print(_disponibility);
+                                            //print(_description);
+                                            //print(_isFavorite);
+                                          }
+                                        },
+                                        child: Text('Ajouter'),
+                                      ),
+                                    ],
+                                  )
                                 ],
                               )),
                         ),

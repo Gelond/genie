@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:genie/src/backend/base_donnees/firebase_management.dart';
 import 'package:genie/src/frontend/screens/pageDescriptionProduit.dart';
 import 'package:genie/src/frontend/screens/pageVoirPanier.dart';
 import 'package:genie/src/frontend/screens/screen1.dart';
 
-import '../../backend/base_donnees/dataProduits.dart';
+import '../../backend/base_donnees/firebase_produit.dart';
 import '../../backend/modeles/produit.dart';
 import '../widgets/customTabBar.dart';
 import '../widgets/favoriteCard.dart';
@@ -19,11 +20,28 @@ class PageMenu extends StatefulWidget {
 
 class _PageMenuState extends State<PageMenu> {
 
+
   int _selectedIndex = 0;
   List<String> tabBars = ['Tous', 'Entrées', 'Plat de résistantces', 'Desserts', 'Boissons'];
-  List<Produit> produitsAff = produits;
+  List<Produit> produits = [];
+  List<Produit> produitsAff = [];
+  List<Produit> produitsFavoris = [];
 
-  void _trier(int index) {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    FirebaseProduit.getProduits().then((value) {
+      setState(() {
+        produits = value;
+        produitsAff = produits;
+      });
+    }
+    );
+  }
+
+  void _trier(int index) async {
+    produitsAff = produits;
     if (index == 0) {
       produitsAff = produits;
     }
@@ -51,6 +69,8 @@ class _PageMenuState extends State<PageMenu> {
 
   @override
   Widget build(BuildContext context) {
+    produitsFavoris = produits.where((element) => element.isFavorite).toList();
+
     return DefaultTabController(
         length: tabBars.length,
         child: Scaffold(
@@ -64,7 +84,8 @@ class _PageMenuState extends State<PageMenu> {
               ),
               //backgroundColor: Colors.blueGrey.shade50,
               leading: new IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> MyHomePage(title: ''))),
+
                   icon: Icon(Icons.arrow_back,)
               ),
 
@@ -89,40 +110,16 @@ class _PageMenuState extends State<PageMenu> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 3),
-                    child: SearchBar(),
+                    child: SearchBar(onChange: (value){
+                      setState(() {
+                        produitsAff = produits.where((element) =>
+                            element.nom.toLowerCase().contains(value.toLowerCase())).toList();
+                      });
+                    }),
                   ),
                 ),
 
-                /*SliverToBoxAdapter(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(0),
-                        child: RaisedButton(
-                          elevation: 10,
-                          onPressed: () {
-                            Navigator.push(
-                                context, new MaterialPageRoute(builder: (
-                                BuildContext context) {
-                              return new MyHomePage(title: '');
-                            }
-                            )
-                            );
-                          },
-                          child: Text('Passer une commande',
-                            textScaleFactor: 1.5,
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
-                              color: Colors.deepPurple,
-                            ),
-                          ),
-                          color: Colors.blueGrey.shade50,
-                        ),
-                      )
-                    ],
-                  ),
-                ),*/
+                if(produitsFavoris.isNotEmpty)
 
                 SliverToBoxAdapter(
                   child: Column(
@@ -138,10 +135,7 @@ class _PageMenuState extends State<PageMenu> {
                           ),
                         ),
                       ),
-                      /* Padding(
-                    padding: const EdgeInsets.only(left: 1, right: 1),
-                    child: CustomText('Les produits favoris', factor: 2.0, color: Colors.black),
-                  ),*/
+
                       Container(
                         height: 200.0,
                         child: ListView.builder(
@@ -151,13 +145,15 @@ class _PageMenuState extends State<PageMenu> {
                                   horizontal: 4.0, vertical: 5.0),
                               child: InkWell(
                                   onTap: () {
-                                    Navigator.push(context, MaterialPageRoute(builder: (context)=>DescriptionProduit(produit: produitsAff[i],inPanier: false, boutton: true,)));
+                                    Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                                        DescriptionProduit(produit: produitsFavoris[i],
+                                          inPanier: false, boutton: true,)));
                                   },
-                                  child: FavoriteCard(produit: produits[i])
+                                  child: FavoriteCard(produit: produitsFavoris[i])
                               ),
                             );
                           },
-                          itemCount: produits.length,
+                          itemCount: produitsFavoris.length,
                           scrollDirection: Axis.horizontal,
                         ),
                       ),
@@ -203,7 +199,9 @@ class _PageMenuState extends State<PageMenu> {
                         children: [
                           InkWell(
                               onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (context)=>DescriptionProduit(produit: produitsAff[index], inPanier: false, boutton: true,)));
+                                Navigator.push(context, MaterialPageRoute(builder: (context)=>
+                                    DescriptionProduit(produit: produitsAff[index],
+                                      inPanier: false, boutton: true,)));
                               },
                               child: ProduitCard(produit: produitsAff[index])
                           ),

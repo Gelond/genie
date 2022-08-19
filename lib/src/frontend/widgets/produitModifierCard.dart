@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:genie/src/backend/modeles/commandeItem.dart';
 
-import '../../backend/base_donnees/local_db_manager.dart';
 import '../../backend/modeles/produit.dart';
 
-class ProduitCard extends StatelessWidget {
-
+class ProduitModifyCard extends StatefulWidget {
   final Produit produit;
-  final bool boutton;
-  ProduitCard({Key? key, required this.produit, this.boutton = true}) : super(key: key);
+  const ProduitModifyCard({Key? key, required this.produit}) : super(key: key);
 
-  LocalBdManager localBdManager = LocalBdManager();
+  @override
+  State<ProduitModifyCard> createState() => _ProduitModifyCardState();
+}
+
+class _ProduitModifyCardState extends State<ProduitModifyCard> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -22,7 +22,7 @@ class ProduitCard extends StatelessWidget {
             children: [
               ClipRRect(
                   borderRadius: BorderRadius.circular(12.0),
-                  child: Container(child: Image.asset(produit.image, fit: BoxFit.fill,),
+                  child: Container(child: Image.asset(widget.produit.image, fit: BoxFit.fill,),
                     height: 90.0, width: 90.0,)
               ),
               Expanded(
@@ -37,13 +37,13 @@ class ProduitCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              produit.nom,
+                              widget.produit.nom,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 //color: Colors.orange
                               ),
                             ),
-                            Text(produit.typeString(),
+                            Text(widget.produit.typeString(),
                               style: TextStyle(
                                   color: Colors.grey
                               ),),
@@ -54,7 +54,7 @@ class ProduitCard extends StatelessWidget {
                                   Icon(Icons.star, color: Colors.orange,
                                     size: 18.0,
                                   ),
-                                  Text(produit.score.toString(),
+                                  Text(widget.produit.score.toString(),
                                     style: TextStyle(
                                         color: Colors.orange
                                     ),
@@ -69,24 +69,8 @@ class ProduitCard extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(right: 10),
-                            child: Text('\$' +produit.prix.toString()),
+                            child: Text('\$' +widget.produit.prix.toString()),
                           ),
-
-                          SizedBox(height: 30,),
-
-                          if(boutton)
-                          ElevatedButton(
-                              onPressed: () async {
-                                await localBdManager.insertProduitInPanier(
-                                    CommandeItem(idProduit: produit.id, quantity: 1, id: 0));
-                                //print('Le produit a été ajouté');
-                              },
-                              child: Text('Ajouter au panier',
-                              style: TextStyle(
-                                fontSize: 8
-                              ),
-                              )
-                          )
                         ],
                       )
                     ],

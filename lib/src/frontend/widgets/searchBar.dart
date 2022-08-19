@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-Widget SearchBar() {
+Widget SearchBar({required void Function(String) onChange}) {
   return Padding(
     padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
     child: CupertinoSearchTextField(
+      onChanged: onChange,
         padding: EdgeInsets.all(15),
         prefixInsets: EdgeInsets.only(left: 15),
         placeholder: 'Rechercher',

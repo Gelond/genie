@@ -1,17 +1,20 @@
 //import 'package:fluter1/widgets/boutonComptage.dart';
 import 'package:flutter/material.dart';
+import 'package:genie/src/backend/base_donnees/local_db_manager.dart';
+import 'package:genie/src/backend/modeles/commandeItem.dart';
 import '../../backend/modeles/produit.dart';
 //import '../modeles/produit.dart';
 
 class PanierCard extends StatefulWidget {
-  final Produit produit;
-  const PanierCard({Key? key, required this.produit}) : super(key: key);
+  final CommandeItem item;
+  const PanierCard({Key? key, required this.item,}) : super(key: key);
 
   @override
   State<PanierCard> createState() => _PanierCardState();
 }
 
 class _PanierCardState extends State<PanierCard> {
+  LocalBdManager localBdManager = LocalBdManager();
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -23,7 +26,7 @@ class _PanierCardState extends State<PanierCard> {
             children: [
               ClipRRect(
                   borderRadius: BorderRadius.circular(12.0),
-                  child: Container(child: Image.asset(widget.produit.image, fit: BoxFit.fill,),
+                  child: Container(child: Image.asset(widget.item.produit!.image, fit: BoxFit.fill,),
                     height: 90.0, width: 90.0,)
               ),
               Expanded(
@@ -38,13 +41,13 @@ class _PanierCardState extends State<PanierCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.produit.nom,
+                              widget.item.produit!.nom,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 //color: Colors.orange
                               ),
                             ),
-                            Text(widget.produit.typeString(),
+                            Text(widget.item.produit!.typeString(),
                               style: TextStyle(
                                   color: Colors.grey
                               ),),
@@ -55,7 +58,7 @@ class _PanierCardState extends State<PanierCard> {
                                   Icon(Icons.star, color: Colors.orange,
                                     size: 25.0,
                                   ),
-                                  Text(widget.produit.score.toString(),
+                                  Text(widget.item.produit!.score.toString(),
                                     style: TextStyle(
                                         fontSize: 15,
                                         color: Colors.orange
@@ -71,7 +74,7 @@ class _PanierCardState extends State<PanierCard> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(right: 10),
-                            child: Text('\$' +widget.produit.prix.toString()),
+                            child: Text('\$' +widget.item.produit!.prix.toString()),
                           ),
 
                           SizedBox(height: 0),
@@ -80,11 +83,11 @@ class _PanierCardState extends State<PanierCard> {
                             children: [
                               RawMaterialButton(
                                 onPressed: () {
+                                  if(widget.item.quantity > 1)
                                   setState(() {
-                                    widget.produit.quantity--;
-                                    if(widget.produit.quantity <= 1)
-                                      widget.produit.quantity = 1;
+                                    widget.item.quantity--;
                                   });
+                                  localBdManager.updateProduitInPanier(widget.item);
                                 },
                                 child: Icon(Icons.remove, color: Colors.white, size: 20,),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(90)),
@@ -92,7 +95,7 @@ class _PanierCardState extends State<PanierCard> {
                                 constraints: BoxConstraints(minWidth: 10, minHeight: 10),
                               ),
 
-                              Text(widget.produit.quantity.toString(),
+                              Text(widget.item.quantity.toString(),
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
@@ -101,8 +104,10 @@ class _PanierCardState extends State<PanierCard> {
                               ),
 
                               RawMaterialButton(
-                                onPressed: ()  { setState(() {
-                                  widget.produit.quantity++;
+                                onPressed: ()  { if(widget.item.quantity<10)
+                                  setState(() {
+                                  widget.item.quantity++;
+                                  localBdManager.updateProduitInPanier(widget.item);
                                 });
                                 },
                                 //constraints: BoxConstraints.tight(1),
@@ -114,45 +119,21 @@ class _PanierCardState extends State<PanierCard> {
                             ],
 
                           ),
-                          //SizedBox(height: 10,),
-
-                          /*GetBuilder(
-                            builder: () {
-                              return BoutonComptage(
-                                onIncrementSelected: () =>
-                                    produit.quantity++,
-                                onDecrementSelected: ()
-                                {
-                                  produit.quantity--;
-                                  if(produit.quantity < 0)
-                                    return 0;
-                                  else return produit.quantity;
-                                },
-                                label: Text(
-                                  produit.quantity.toString(),
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black
-                                  ),
-                                ),
-                              );
-                            },
-                          ),*/
 
                           SizedBox(height: 0),
 
                           ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                        print('Debut suppression');
+                                         localBdManager.deleteProduitFromPanier(widget.item.id);
+                                        print('Le produit a été supprimé');
+                              },
+
                               child: Text('Supprimer',
                                 style: TextStyle(
                                     fontSize: 10
                                 ),)
                           ),
-                          /*ElevatedButton(
-                              onPressed: () {},
-                              child: Icon(Icons.delete)
-                          )*/
                         ],
                       )
                     ],
